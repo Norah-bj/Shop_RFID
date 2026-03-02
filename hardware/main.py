@@ -8,7 +8,7 @@ import time
 # --- Configuration ---
 WIFI_SSID = "EdNet"
 WIFI_PASS = "Huawei@123"
-TEAM_ID = "team_pixel" 
+TEAM_ID = "team_nora_and_anna" 
 MQTT_BROKER = "broker.benax.rw"
 CLIENT_ID = f"ESP8266_{TEAM_ID}"
 
