@@ -142,4 +142,4 @@ def topup():
     return jsonify({"status": "success", "new_balance": card.balance}), 200
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=9250, debug=True)
+    socketio.run(app, host='0.0.0.0', port=9250, allow_unsafe_werkzeug=True)
