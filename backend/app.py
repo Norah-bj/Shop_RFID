@@ -36,7 +36,7 @@ with app.app_context():
     db.create_all()
 
 # --- CONFIGURATION ---
-TEAM_ID = "team_nora_and_anna"
+TEAM_ID = "team_nora_and_joshua"
 MQTT_BROKER = "broker.benax.rw"
 TOPIC_STATUS = f"rfid/{TEAM_ID}/card/status"
 TOPIC_PAY = f"rfid/{TEAM_ID}/card/pay"
