@@ -1,5 +1,4 @@
 import network
-import machine
 from mfrc522 import MFRC522
 from umqtt.simple import MQTTClient
 import ujson
@@ -37,12 +36,12 @@ def connect_wifi():
 reader = MFRC522(sck=14, mosi=13, miso=12, rst=0, cs=2)
 
 # --- MQTT Callback ---
-def on_message(topic, msg):
+def on_message(topic, msg):  # pylint: disable=unused-argument
     """Triggered when the backend acknowledges a top-up"""
     try:
         data = ujson.loads(msg)
         print("-" * 30)
-        print(f"CONFIRMED TRANSACTION")
+        print("CONFIRMED TRANSACTION")
         print(f"UID: {data['uid']}")
         print(f"NEW BALANCE: {data['new_balance']} RWF")
         print("-" * 30)

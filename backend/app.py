@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -44,14 +44,19 @@ TOPIC_TOPUP = f"rfid/{TEAM_ID}/card/topup"
 
 # --- MQTT LOGIC ---
 def on_connect(client, userdata, flags, rc):
-    print(f"[*] MQTT Connected to: {MQTT_BROKER}")
-    client.subscribe(TOPIC_STATUS)
+    if rc == 0:
+        print(f"[✓] MQTT CONNECTED to: {MQTT_BROKER}")
+        print(f"[✓] Subscribed to: {TOPIC_STATUS}")
+        client.subscribe(TOPIC_STATUS)
+    else:
+        print(f"[✗] MQTT FAILED to connect. Error code: {rc}")
 
 def on_message(client, userdata, msg):
     with app.app_context():
         try:
             payload = json.loads(msg.payload.decode())
             uid = str(payload.get('uid')).upper().strip()
+            print(f"[📡] CARD SCANNED! UID received: {uid}")
             
             if uid:
                 # implement "Safe Wallet Update" - Check if card exists, if not, create it
@@ -59,10 +64,12 @@ def on_message(client, userdata, msg):
                 if not card:
                     card = UserCard(uid=uid, balance=0)
                     db.session.add(card)
+                    print(f"[+] New card registered: {uid}")
                 
                 card.last_seen = datetime.utcnow()
                 db.session.commit()
                 
+                print(f"[→] Emitting update_ui event for UID: {uid}, Balance: {card.balance}")
                 socketio.emit('update_ui', {
                     "uid": uid,
                     "balance": card.balance,
@@ -72,17 +79,49 @@ def on_message(client, userdata, msg):
         except Exception as e:
             print(f"[!] MQTT Error: {e}")
 
-mqtt_client = mqtt.Client()
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
-mqtt_client.connect(MQTT_BROKER, 1883, 60)
-mqtt_client.loop_start()
+try:
+    mqtt_client = mqtt.Client()
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(MQTT_BROKER, 1883, 60)
+    mqtt_client.loop_start()
+    print(f"[~] MQTT loop started. Waiting for cards on: {TOPIC_STATUS}")
+except Exception as e:
+    print(f"[✗] MQTT startup failed: {e}")
 
 # --- ROUTES ---
 
 @app.route('/')
 def index():
-    return render_template('dashboard.html')
+    if 'role' not in session:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', role=session['role'], username=session.get('username', ''))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        users = {
+            'agent': {'password': 'agent123', 'role': 'agent'},
+            'sales': {'password': 'sales123', 'role': 'salesperson'},
+            'admin': {'password': 'admin123', 'role': 'admin'}
+        }
+        
+        if username in users and users[username]['password'] == password:
+            session['username'] = username
+            session['role'] = users[username]['role']
+            return redirect(url_for('index'))
+            
+        return render_template('login.html', error="Invalid credentials")
+        
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/pay', methods=['POST'])
 def pay():

@@ -76,6 +76,13 @@
 
         /* Custom override for input states */
         input:focus { border-color: #A7AA63 !important; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-modal * { visibility: visible; }
+            #receipt-modal { position: absolute; left: 0; top: 0; padding: 0; margin: 0; background: none; box-shadow: none; border: none; }
+            button { display: none !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen pb-10">
@@ -85,19 +92,26 @@
             <h1 class="text-lg font-black tracking-tighter text-[#EAE6D2]">RFID<span class="neon-text-cyan italic">ANNORA</span></h1>
             <span class="text-[10px] mono text-[#505039] uppercase tracking-widest font-bold">Node: <span class="text-[#A7AA63]">team_nora_and_anna</span></span>
         </div>
-        <div class="flex items-center gap-3 bg-black/40 px-4 py-1 rounded-full border border-[#505039]">
-            <span id="conn-status-dot" class="w-2 h-2 bg-red-900 rounded-full animate-pulse"></span>
-            <span id="conn-status-text" class="text-[10px] font-bold uppercase tracking-widest text-red-500">Offline</span>
+        <div class="flex items-center gap-3">
+            <div class="bg-black/40 px-4 py-1 flex items-center gap-2 rounded-full border border-[#505039]">
+                <span id="conn-status-dot" class="w-2 h-2 bg-red-900 rounded-full animate-pulse"></span>
+                <span id="conn-status-text" class="text-[10px] font-bold uppercase tracking-widest text-red-500">Offline</span>
+            </div>
+            <div class="bg-black/40 px-4 py-1 rounded-full border border-[#505039] flex items-center gap-2">
+                <span class="text-[10px] mono text-[#A7AA63] uppercase tracking-widest border-r border-[#505039] pr-2">{{ role }}</span>
+                <a href="/logout" class="text-[10px] font-bold uppercase tracking-widest text-[#EAE6D2] hover:text-red-500 pl-1">Logout</a>
+            </div>
         </div>
     </div>
 
     <main class="container mx-auto px-6 py-8 max-w-6xl">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 {% if role in ['admin'] %}lg:grid-cols-12{% else %}lg:grid-cols-1{% endif %} gap-8">
             
-            <section class="lg:col-span-4 neon-border-indigo glass-dark p-6 rounded-[2rem] space-y-6 h-fit">
+            {% if role in ['admin', 'agent'] %}
+            <section class="{% if role == 'agent' %}lg:col-span-1 max-w-lg mx-auto w-full{% else %}lg:col-span-4{% endif %} neon-border-indigo glass-dark p-6 rounded-[2rem] space-y-6 h-fit">
                 <div class="flex items-center gap-3 border-b border-[#505039] pb-4">
                     <div class="p-2 bg-[#505039]/40 rounded-lg"><svg class="w-5 h-5 text-[#A7AA63]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div>
-                    <h2 class="text-xl font-bold text-[#EAE6D2]">Admin: Top-Up</h2>
+                    <h2 class="text-xl font-bold text-[#EAE6D2]">Account: Top-Up</h2>
                 </div>
                 <div class="space-y-4">
                     <div class="bg-[#121A1B]/60 p-4 rounded-xl border border-[#505039]">
@@ -114,8 +128,10 @@
                     </button>
                 </div>
             </section>
+            {% endif %}
 
-            <section class="lg:col-span-8 neon-border-cyan glass-dark p-6 rounded-[2rem] space-y-6">
+            {% if role in ['admin', 'salesperson'] %}
+            <section class="{% if role == 'salesperson' %}lg:col-span-1 max-w-4xl mx-auto w-full{% else %}lg:col-span-8{% endif %} neon-border-cyan glass-dark p-6 rounded-[2rem] space-y-6">
                 <div class="flex justify-between items-center border-b border-[#505039] pb-4">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-[#505039]/40 rounded-lg"><svg class="w-5 h-5 text-[#A7AA63]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div>
@@ -145,6 +161,52 @@
                     </div>
                 </div>
             </section>
+            {% endif %}
+        </div>
+
+        <!-- Receipt Modal -->
+        <div id="receipt-modal" class="fixed inset-0 z-[100] hidden bg-[#121A1B]/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-[#121A1B] border border-[#A7AA63] shadow-[0_0_20px_rgba(167,170,99,0.2)] p-8 max-w-sm w-full rounded-2xl relative">
+                <div class="text-center mb-6 pb-6 border-b border-[#505039] border-dashed">
+                    <h2 class="text-2xl font-black text-[#EAE6D2]">RFID<span class="neon-text-cyan italic">ANNORA</span></h2>
+                    <p class="text-[10px] mono mt-1 text-[#505039]">OFFICIAL RECEIPT</p>
+                </div>
+                
+                <div class="space-y-4 text-sm mono text-[#EAE6D2]">
+                    <div class="flex justify-between">
+                        <span class="text-[#505039]">Date</span>
+                        <span id="receipt-date"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-[#505039]">Served By</span>
+                        <span class="uppercase">{{ username }} ({{ role }})</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-[#505039]">Customer UID</span>
+                        <span id="receipt-uid"></span>
+                    </div>
+                    <div class="py-2 border-y border-[#505039] border-dashed text-[#A7AA63]">
+                        <div class="flex justify-between font-bold text-xs items-center">
+                            <span id="receipt-item-name" class="truncate pr-2"></span>
+                            <span id="receipt-qty-badge" class="bg-[#505039] text-[#EAE6D2] px-2 py-0.5 rounded-md ml-auto mr-2 shrink-0"></span>
+                            <span id="receipt-item-cost" class="shrink-0"></span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-lg font-black pt-2">
+                        <span>TOTAL</span>
+                        <span class="text-[#A7AA63]"><span id="receipt-total"></span> <span class="text-xs text-[#EAE6D2]">RWF</span></span>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex gap-4">
+                    <button onclick="closeReceipt()" class="w-full bg-[#121A1B] border border-[#505039] hover:bg-[#505039] text-[#EAE6D2] font-bold uppercase tracking-widest text-[10px] py-3 rounded-xl transition-all">
+                        Close
+                    </button>
+                    <button onclick="window.print()" class="w-full bg-[#A7AA63] hover:bg-[#EAE6D2] text-[#121A1B] font-bold uppercase tracking-widest text-[10px] py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(167,170,99,0.3)]">
+                        Print Receipt
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="mt-8 neon-border-cyan glass-dark rounded-2xl p-6 bg-black/20">
@@ -170,8 +232,6 @@
         const socket = io(`http://${window.location.hostname}:9250`);
 
         const products = [
-            { id: 1, name: "AirPods Gen 2", price: 120000, img: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200", cat: "Apple" },
-            { id: 2, name: "AirPods Pro", price: 250000, img: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=200", cat: "Apple" },
             { id: 3, name: "AirPods Max", price: 550000, img: "https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=200", cat: "Apple" },
             { id: 4, name: "Sony XM5", price: 380000, img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200", cat: "Headsets" },
             { id: 5, name: "Bose QC45", price: 320000, img: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200", cat: "Headsets" },
@@ -211,9 +271,14 @@
         }
 
         socket.on('update_ui', (data) => {
-            document.getElementById('admin-uid').innerText = data.uid;
-            document.getElementById('pay-uid').innerText = data.uid;
-            document.getElementById('admin-prev-balance').innerText = data.balance.toLocaleString() + " RWF";
+            const adminUid = document.getElementById('admin-uid');
+            const payUid = document.getElementById('pay-uid');
+            const adminBalance = document.getElementById('admin-prev-balance');
+
+            if (adminUid) adminUid.innerText = data.uid;
+            if (payUid) payUid.innerText = data.uid;
+            if (adminBalance) adminBalance.innerText = data.balance.toLocaleString() + " RWF";
+
             if (data.type === 'TOP-UP' || data.type === 'PAYMENT') {
                 addToLedger(data);
             }
@@ -237,7 +302,23 @@
                 });
                 const res = await response.json();
                 if (response.ok) {
-                    alert(`✅ Success! Balance: ${res.new_balance} RWF`);
+                    // Force update local balance display immediately
+                    const adminBalance = document.getElementById('admin-prev-balance');
+                    if (adminBalance) adminBalance.innerText = res.new_balance.toLocaleString() + " RWF";
+
+                    if (endpoint === '/pay' && selectedProduct) {
+                        const qty = parseInt(document.getElementById('pay-qty').value) || 1;
+                        document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+                        document.getElementById('receipt-uid').innerText = uid;
+                        document.getElementById('receipt-item-name').innerText = selectedProduct.name;
+                        document.getElementById('receipt-qty-badge').innerText = "x" + qty;
+                        document.getElementById('receipt-item-cost').innerText = selectedProduct.price.toLocaleString();
+                        document.getElementById('receipt-total').innerText = (selectedProduct.price * qty).toLocaleString();
+                        
+                        document.getElementById('receipt-modal').classList.remove('hidden');
+                    } else {
+                        alert(`✅ Top-Up Success! New Balance: ${res.new_balance.toLocaleString()} RWF`);
+                    }
                 } else {
                     alert(`❌ Error: ${res.error}`);
                 }
@@ -262,6 +343,16 @@
             document.getElementById('conn-status-text').innerText = "System Live";
             document.getElementById('conn-status-text').className = "text-[10px] font-bold text-[#A7AA63]";
         });
+
+        function closeReceipt() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+            // reset selection after close
+            selectedProduct = null;
+            document.querySelectorAll('.product-card').forEach(el => el.classList.remove('selected'));
+            document.getElementById('total-cost-display').innerText = '0';
+            document.getElementById('pay-uid').innerText = '--- --- ---';
+            document.getElementById('pay-qty').value = '1';
+        }
 
         initGrid();
     </script>

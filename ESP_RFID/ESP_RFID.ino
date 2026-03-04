@@ -5,8 +5,9 @@
 #include <SPI.h>
 
 /* ================= WIFI CONFIG ================= */
-const char* WIFI_SSID = "Bonne";
-const char* WIFI_PASS = "RJMBTRJ@27GR01";
+const char* WIFI_SSID = "EdNet";
+const char* WIFI_PASS = "Huawei@123";
+//RJMBTRJ@27GR01
 
 /* ================= MQTT CONFIG ================= */
 const char* MQTT_BROKER = "broker.benax.rw";
@@ -35,14 +36,24 @@ PubSubClient client(espClient);
 
 /* ================= WIFI CONNECTION ================= */
 void connectWiFi() {
-  Serial.print("Connecting WiFi");
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
+  int timeout = 0;
+  while (WiFi.status() != WL_CONNECTED && timeout < 30) {
     delay(500);
     Serial.print(".");
+    timeout++;
   }
-  Serial.println("\nWiFi Connected!");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n[OK] WiFi Connected!");
+    Serial.print("[OK] IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\n[FAIL] WiFi FAILED! Check SSID and password.");
+    Serial.print("Tried SSID: ");
+    Serial.println(WIFI_SSID);
+  }
 }
 
 /* ================= RFID WRITE FUNCTION ================= */

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | RFID Annora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #121A1B; color: #EAE6D2; }
+        .neon-border-cyan { box-shadow: 0 0 10px rgba(167, 170, 99, 0.2); border: 1px solid rgba(167, 170, 99, 0.3); }
+        .glass-dark { background: rgba(80, 80, 57, 0.15); backdrop-filter: blur(12px); }
+        .neon-text-cyan { text-shadow: 0 0 8px rgba(167, 170, 99, 0.5); color: #A7AA63; }
+        input:focus { border-color: #A7AA63 !important; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#A7AA63]/10 rounded-full blur-3xl rounded-full mix-blend-screen pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#505039]/20 rounded-full blur-3xl rounded-full mix-blend-screen pointer-events-none"></div>
+
+    <div class="glass-dark neon-border-cyan p-10 rounded-[2rem] w-full max-w-md relative z-10 shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black tracking-tighter text-[#EAE6D2]">RFID<span class="neon-text-cyan italic">ANNORA</span></h1>
+            <p class="text-[#505039] font-bold text-sm tracking-widest uppercase mt-2">Authentication Gateway</p>
+        </div>
+        
+        {% if error %}
+        <div class="bg-red-900/40 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-xs text-center font-bold tracking-wider">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="space-y-6">
+            <div>
+                <label class="block text-[10px] font-bold text-[#A7AA63] uppercase tracking-widest mb-2">Login ID / Role</label>
+                <input type="text" name="username" placeholder="e.g. admin, agent, sales" required autocomplete="off" class="w-full bg-black/40 border border-[#505039] rounded-xl py-4 px-6 text-[#EAE6D2] focus:outline-none placeholder:text-[#505039]">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-[#A7AA63] uppercase tracking-widest mb-2">Secure PIN / Password</label>
+                <input type="password" name="password" placeholder="••••••••" required class="w-full bg-black/40 border border-[#505039] rounded-xl py-4 px-6 text-[#EAE6D2] focus:outline-none placeholder:text-[#505039]">
+            </div>
+            <button type="submit" class="w-full bg-[#505039] hover:bg-[#A7AA63] text-[#EAE6D2] hover:text-[#121A1B] font-black uppercase tracking-widest text-xs py-4 rounded-xl transition-all shadow-lg shadow-[#A7AA63]/10 hover:shadow-[#A7AA63]/30">
+                Secure Login
+            </button>
+        </form>
+        
+        <div class="mt-8 text-center text-[10px] text-[#505039] flex flex-col gap-2 border-t border-[#505039]/30 pt-6">
+            <p class="uppercase font-bold tracking-widest text-[#A7AA63] mb-1">Demo Credentials</p>
+            <p class="font-mono">admin <span class="text-[#A7AA63]">/</span> admin123</p>
+            <p class="font-mono">agent <span class="text-[#A7AA63]">/</span> agent123</p>
+            <p class="font-mono">sales <span class="text-[#A7AA63]">/</span> sales123</p>
+        </div>
+    </div>
+</body>
+</html>
